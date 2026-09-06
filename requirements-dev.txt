@@ -1,0 +1,7 @@
+# Test-only dependencies. Install with: pip install -r requirements-dev.txt
+# (this pulls in requirements.txt too, so one command sets up everything).
+-r requirements.txt
+
+# Used only to generate small PDF fixtures on the fly for parser/ingestion
+# tests, so we don't need to commit a binary sample PDF to the repo.
+fpdf2>=2.7,<3.0

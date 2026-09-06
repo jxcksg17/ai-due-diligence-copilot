@@ -1,0 +1,46 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Python environments, bytecode, test/build artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Editor and operating-system files
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Local logs, scratch work, databases, and dumps
+work/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+
+# Local model and Hugging Face/Ollama caches or weights
+.cache/
+**/.cache/
+huggingface/
+**/huggingface/
+.ollama/
+**/.ollama/
+models/
+*.gguf
+*.safetensors
+pytorch_model*.bin
+model*.onnx
+
+# Source filings are supplied locally and are not redistributed
+data/*.pdf
+!data/.gitkeep
