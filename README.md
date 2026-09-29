@@ -6,12 +6,6 @@
 
 Due diligence needs more than plausible answers: reviewers need source pages, reporting periods, deterministic calculations, and evidence that citations support their claims. This copilot makes local filings searchable, comparable, and independently verifiable.
 
-## More than “chat with PDF”
-
-- Metadata is resolved before dense and lexical retrieval; RRF combines candidates before cross-encoder reranking.
-- Financial calculations use Python `Decimal`; the LLM may explain but cannot override them.
-- Citation IDs are validated before a separate NLI model checks claim support.
-
 ## Architecture
 
 ```mermaid
@@ -35,6 +29,7 @@ flowchart LR
     Qwen --> IDs[Citation-ID validation]
     IDs --> NLI[DeBERTa NLI verification]
     NLI --> Answer[Verified or flagged answer]
+    Answer --> Eval[42-case regression evaluation]
 
     Evidence --> Calc[Decimal financial calculation]
     Calc --> Qwen
@@ -47,11 +42,12 @@ flowchart LR
 
 - **Grounded financial Q&A:** Qwen answers only from numbered filing evidence and returns structured inline citations.
 - **Deterministic financial calculations:** revenue growth uses validated source values, explicit units, provenance, and `ROUND_HALF_UP` behavior.
-- **Temporal change detection:** distinct filings are resolved by company, type, and year. Apple FY2024–FY2025 net sales increased from $391.035B to $416.161B (**+$25.126B / +6.4%**), calculated deterministically.
+- **Temporal change detection:** filings are resolved by company, type, and year; changes retain evidence from both periods.
 - **Risk Radar:** complete Item 1A scans organize four risk topics without severity scores and preserve two-period evidence.
-- **Management Claim vs Evidence:** explicitly attributed issuer statements are kept separate from filing facts, deterministic analysis, and Qwen interpretation. Apple CFO commentary that FY2025 revenue reached **$416B** is supported by the 10-K’s **$416.161B** total net sales; broader “record year” language is only partially supported by the available periods.
+- **Management Claim vs Evidence:** attributed issuer statements stay separate from filing facts, deterministic analysis, and Qwen interpretation.
 - **Metadata-aware hybrid retrieval:** document scope is resolved before BGE and PostgreSQL FTS retrieval, RRF fusion, and MiniLM reranking.
 - **Citation verification:** DeBERTa checks citation-bearing claims against cited chunks, including multi-citation evidence.
+- **Quantitative evaluation:** a versioned golden set measures retrieval, generation, citations, domain logic, refusals, and latency independently, then compares future runs with an approved baseline.
 
 ## Local model stack
 
@@ -79,8 +75,13 @@ FastAPI, SQLAlchemy, Alembic, pypdf, Sentence Transformers, PyTorch, and pytest 
 | M8 | Complete | Cross-filing financial and disclosure comparison |
 | M9 | Complete | Evidence-driven, temporally aware Risk Radar |
 | M10 | Complete | Attributed management claims checked against filing evidence |
+| M11 | Complete | Repeatable AI/RAG evaluation and regression baseline |
 
-Verified checkpoint: **177 tests passing**, two Apple 10-Ks plus the official FY2025 Q4 earnings-release exhibit, 639/639 embedded chunks, pgvector `vector(1024)`, and Alembic revision `20260906_03`.
+Verified checkpoint: **204 tests passing**, two Apple 10-Ks plus the official FY2025 Q4 earnings-release exhibit, 639/639 embedded chunks, pgvector `vector(1024)`, and Alembic revision `20260906_03`.
+
+### Evaluation snapshot
+
+The 42-case M11 baseline is intentionally small and inspectable. Hybrid+rerank Recall@5 is **83.3%**; deterministic financial, temporal, Risk Radar, and claim-state slices score **100%** on their reviewed cases. The baseline also exposes current weaknesses: DeBERTa supports **66.7%** of three generated factual claims, citation-contract validity is **80%**, and safe refusal behavior is **60%**. These are regression baselines, not claims of statistical certainty.
 
 ## Quick setup
 
@@ -97,7 +98,7 @@ psql -d dd_copilot -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 ollama pull qwen3:8b-q4_K_M
 ```
 
-Obtain official filings and issuer releases from the company or [SEC EDGAR](https://www.sec.gov/edgar/search/) and place them in `data/`. PDFs are intentionally ignored by Git; ingest each filing or earnings release as a separate document.
+Place official filings or issuer releases from [SEC EDGAR](https://www.sec.gov/edgar/search/) in `data/`; PDFs are ignored by Git.
 
 ```bash
 python -m scripts.ingest_document \
@@ -106,27 +107,31 @@ python -m scripts.ingest_document \
   --fiscal-year 2024 \
   --file data/apple_2024_10k.pdf
 
-# Fresh databases created by the current ingestion metadata:
 alembic stamp 20260905_02
 alembic upgrade head
 
 python -m scripts.backfill_embeddings
 pytest -q
+python -m evals.run --mode quick
+python -m evals.run --mode full --output evals/reports/current.json
+python -m evals.compare \
+  --baseline evals/baselines/m11_v1.json \
+  --current evals/reports/current.json
 uvicorn app.main:app --reload
 ```
 
-For a pre-embedding M2 database, run `alembic upgrade head` directly. Analysis currently uses modular services rather than a public `/query` endpoint.
+For a pre-embedding M2 database, run `alembic upgrade head` directly.
 
 ## Known limitations
 
 - Chunking is page-aware, not section-aware; revenue growth is the only deterministic financial tool.
-- Temporal financial comparison is limited to consolidated total net sales; Risk Radar supports four explicit Item 1A topics, not a universal filing diff or risk ontology.
-- Management-claim checking currently uses constrained, explicitly attributed Apple earnings-release patterns and total-net-sales evidence; it is not a universal claim extractor or credibility score.
+- Temporal finance covers consolidated total net sales; Risk Radar supports four Item 1A topics.
+- Claim checking uses constrained, attributable earnings-release patterns; it is not a credibility score.
 - NLI is conservative and may flag subtle or partly aligned wording as ambiguous.
 - PostgreSQL FTS is not full BM25; vector search is exact rather than ANN-indexed.
-- The Alembic history upgrades the original M2 schema and does not yet contain a clean baseline migration.
 - Running every model simultaneously can create memory pressure on a 16 GB Mac. Retrieval, Qwen generation, and DeBERTa verification are safest as staged workloads.
+- The 42-case baseline is a regression signal, not a statistically representative benchmark; generation and refusal slices are especially small.
 
 ## Roadmap
 
-**M11 and beyond:** regression evaluation, product APIs/UI, authentication, and deployment infrastructure.
+**M12 next:** product APIs/UI, authentication, deployment, and CI/CD.

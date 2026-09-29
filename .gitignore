@@ -44,3 +44,6 @@ model*.onnx
 # Source filings are supplied locally and are not redistributed
 data/*.pdf
 !data/.gitkeep
+
+# Generated evaluation runs; approved compact baselines live in evals/baselines/
+evals/reports/*.json

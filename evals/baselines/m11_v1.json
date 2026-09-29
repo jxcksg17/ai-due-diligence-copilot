@@ -1,0 +1,261 @@
+{
+  "case_counts": {
+    "claim_evidence": 5,
+    "financial": 5,
+    "metadata": 5,
+    "retrieval": 12,
+    "risk_radar": 4,
+    "temporal": 6,
+    "unsupported": 5
+  },
+  "case_outcomes": {
+    "claim_eps_ambiguous": "ambiguous",
+    "claim_installed_base_insufficient": "insufficient_evidence",
+    "claim_record_partially_supported": "partially_supported",
+    "claim_revenue_supported": "supported",
+    "claim_satisfaction_unverifiable": "not_objectively_verifiable",
+    "meta_2024_annual_report_phrase": "resolved",
+    "meta_2025_10k_phrase": "resolved",
+    "meta_ambiguous_year": "ambiguous",
+    "meta_earnings_release_explicit": "resolved",
+    "meta_unavailable_2030": "unavailable",
+    "ret_2025_operating_cash": "flagged",
+    "ret_2025_research_development": "verified",
+    "ret_2025_total_net_sales": "verified",
+    "risk_competition_temporal": "recurring_ambiguous",
+    "risk_cybersecurity_temporal": "recurring_unchanged",
+    "risk_legal_temporal": "recurring_ambiguous",
+    "risk_supply_chain_temporal": "recurring_changed",
+    "temporal_apple_sales_2024_2025": "increased",
+    "temporal_competition_disclosure": "ambiguous",
+    "temporal_supply_chain_disclosure": "ambiguous",
+    "temporal_synthetic_decline": "declined",
+    "temporal_synthetic_unchanged": "unchanged",
+    "temporal_unavailable_period": "unavailable",
+    "unsupported_ambiguous_scope": "ambiguous",
+    "unsupported_future_stock_price": "generation_error",
+    "unsupported_mars_offices": "answered",
+    "unsupported_mismatched_citation_probe": "unsupported_claim",
+    "unsupported_unavailable_period": "unavailable"
+  },
+  "evaluation_version": "m11-v1",
+  "generated_at": "2026-09-29T10:42:34.500071+00:00",
+  "git_commit": "89db0551b629ab42f6ed3030e333ee7d74262ed8",
+  "latencies_seconds": {
+    "citation_and_alignment_verification": {
+      "citation": {
+        "cold_start": 0.313654,
+        "count": 4,
+        "max": 0.313654,
+        "mean": 0.095364,
+        "median": 0.023947,
+        "warm_mean": 0.022601
+      },
+      "overall": 1.423431,
+      "risk_alignment": {
+        "cold_start": 0.162811,
+        "count": 4,
+        "max": 0.171102,
+        "mean": 0.167233,
+        "median": 0.167509,
+        "warm_mean": 0.168707
+      },
+      "temporal_alignment": {
+        "cold_start": 0.195671,
+        "count": 2,
+        "max": 0.195671,
+        "mean": 0.186188,
+        "median": 0.186188,
+        "warm_mean": 0.176705
+      }
+    },
+    "dense_retrieval": {
+      "cold_start": 0.007548,
+      "max": 0.007548,
+      "mean": 0.00411,
+      "median": 0.003837,
+      "warm_mean": 0.003797
+    },
+    "fusion": {
+      "cold_start": 0.000161,
+      "max": 0.00019,
+      "mean": 0.000162,
+      "median": 0.00016,
+      "warm_mean": 0.000162
+    },
+    "lexical_retrieval": {
+      "cold_start": 0.062611,
+      "max": 0.071524,
+      "mean": 0.052302,
+      "median": 0.058728,
+      "warm_mean": 0.051365
+    },
+    "metadata_resolution": {
+      "cold_start": 0.002475,
+      "max": 0.002475,
+      "mean": 0.000798,
+      "median": 0.00058,
+      "warm_mean": 0.000646
+    },
+    "overall": 141.193083,
+    "query_encoding": {
+      "cold_start": 0.116986,
+      "max": 0.116986,
+      "mean": 0.055063,
+      "median": 0.049675,
+      "warm_mean": 0.049434
+    },
+    "qwen_generation": {
+      "cold_start": 26.305214,
+      "count": 5,
+      "max": 26.524994,
+      "mean": 22.531663,
+      "median": 25.780196,
+      "warm_mean": 21.588275
+    },
+    "reranking": {
+      "cold_start": 0.289054,
+      "max": 0.385065,
+      "mean": 0.300459,
+      "median": 0.305699,
+      "warm_mean": 0.301496
+    },
+    "retrieval_domain_phase": 21.213465
+  },
+  "mandatory_external_api_cost_usd": 0,
+  "metrics": {
+    "citation": {
+      "citation_validity_rate": 0.8,
+      "semantic_support_rate": 0.666667,
+      "unsupported_claim_detection": 1.0,
+      "verified_claim_count": 3
+    },
+    "classification": {
+      "claim_evidence": {
+        "case_count": 5,
+        "claim_source_provenance": 1.0,
+        "filing_evidence_provenance": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "numeric_agreement": 1.0,
+        "state_accuracy": 1.0
+      },
+      "metadata": {
+        "accuracy": 1.0,
+        "case_count": 5,
+        "macro_f1": 1.0
+      },
+      "risk_radar": {
+        "accuracy": 1.0,
+        "case_count": 4,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0
+      },
+      "temporal_disclosure": {
+        "accuracy": 1.0,
+        "case_count": 2,
+        "macro_f1": 1.0
+      }
+    },
+    "deterministic": {
+      "financial": {
+        "case_count": 5,
+        "classification_accuracy": 1.0,
+        "numeric_accuracy": 1.0,
+        "provenance_accuracy": 1.0,
+        "rounding_accuracy": 1.0
+      },
+      "temporal_numeric": {
+        "numeric_accuracy": 1.0,
+        "numeric_case_count": 4,
+        "state_accuracy": 1.0
+      }
+    },
+    "generation": {
+      "answer_relevancy": 1.0,
+      "faithfulness": 0.666667,
+      "generation_case_count": 5,
+      "supported_case_count": 3
+    },
+    "refusal": {
+      "case_count": 5,
+      "correct_behavior_rate": 0.6
+    },
+    "retrieval": {
+      "hybrid": {
+        "case_count": 12,
+        "mrr": 0.527778,
+        "precision_at_1": 0.416667,
+        "precision_at_3": 0.25,
+        "precision_at_5": 0.15,
+        "recall_at_1": 0.416667,
+        "recall_at_3": 0.666667,
+        "recall_at_5": 0.666667
+      },
+      "hybrid_rerank": {
+        "case_count": 12,
+        "mrr": 0.520833,
+        "precision_at_1": 0.333333,
+        "precision_at_3": 0.277778,
+        "precision_at_5": 0.183333,
+        "recall_at_1": 0.333333,
+        "recall_at_3": 0.75,
+        "recall_at_5": 0.833333
+      },
+      "vector_only": {
+        "case_count": 12,
+        "mrr": 0.534722,
+        "precision_at_1": 0.333333,
+        "precision_at_3": 0.277778,
+        "precision_at_5": 0.183333,
+        "recall_at_1": 0.333333,
+        "recall_at_3": 0.75,
+        "recall_at_5": 0.833333
+      }
+    }
+  },
+  "mode": "full",
+  "models": {
+    "citation_verifier": "cross-encoder/nli-deberta-v3-small",
+    "embedding": "BAAI/bge-large-en-v1.5",
+    "generator": "qwen3:8b-q4_K_M",
+    "reranker": "cross-encoder/ms-marco-MiniLM-L6-v2"
+  },
+  "report_schema_version": "1",
+  "runtime": {
+    "alembic_revision": "20260906_03",
+    "chunk_count": 639,
+    "documents": [
+      {
+        "chunks": 349,
+        "company": "Apple",
+        "document_type": "10-K",
+        "embedded": 349,
+        "fiscal_year": 2025,
+        "id": 1
+      },
+      {
+        "chunks": 271,
+        "company": "Apple",
+        "document_type": "10-K",
+        "embedded": 271,
+        "fiscal_year": 2024,
+        "id": 2
+      },
+      {
+        "chunks": 19,
+        "company": "Apple",
+        "document_type": "earnings_release",
+        "embedded": 19,
+        "fiscal_year": 2025,
+        "id": 3
+      }
+    ],
+    "embedded_count": 639,
+    "pgvector": "0.8.6",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.7"
+  }
+}
