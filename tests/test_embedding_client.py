@@ -83,6 +83,7 @@ def test_bge_uses_distinct_document_and_query_encodings() -> None:
     client = BGEEmbeddingClient(
         model_name="BAAI/bge-large-en-v1.5",
         dimensions=1024,
+        device="cpu",
         encoder=encoder,
     )
 
