@@ -1,25 +1,39 @@
-"""
-Application entrypoint.
-
-This file's only job is to construct the FastAPI app and register
-routers. It intentionally contains no business logic and no route
-handlers of its own — those live in `app/api/*`. As the project grows
-(ingestion, retrieval, financial, features routers), this file gains
-one `app.include_router(...)` line per module and nothing else. That
-is the entire scaling story for this file.
-"""
+"""FastAPI application factory and production entrypoint."""
 
 from fastapi import FastAPI
 
 from app.api import health
-from app.config import get_settings
+from app.api.exception_handlers import install_exception_handlers
+from app.api.routes import router as api_router
+from app.api.services import ProductionAPI, ProductionAPIService
+from app.config import Settings, get_settings
+from app.db.session import engine
+from app.observability import configure_logging, install_request_middleware
+from app.readiness import ReadinessChecker
 
-settings = get_settings()
 
-app = FastAPI(
-    title=settings.app_name,
-    description="Evidence-driven financial due-diligence RAG platform.",
-    version="0.1.0",
-)
+def create_app(
+    settings: Settings | None = None,
+    production_api: ProductionAPI | None = None,
+    readiness_checker: ReadinessChecker | None = None,
+) -> FastAPI:
+    resolved = settings or get_settings()
+    configure_logging(resolved)
+    app = FastAPI(
+        title=resolved.app_name,
+        description="Evidence-grounded financial intelligence over company filings.",
+        version="1.0.0",
+    )
+    app.state.settings = resolved
+    app.state.production_api = production_api or ProductionAPIService(resolved)
+    app.state.readiness_checker = readiness_checker or ReadinessChecker(
+        settings=resolved, engine=engine
+    )
+    install_request_middleware(app, resolved)
+    install_exception_handlers(app)
+    app.include_router(health.router)
+    app.include_router(api_router, prefix=resolved.api_prefix)
+    return app
 
-app.include_router(health.router)
+
+app = create_app()

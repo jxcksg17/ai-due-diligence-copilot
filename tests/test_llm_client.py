@@ -79,6 +79,7 @@ def test_factory_selects_ollama_from_configuration(monkeypatch: pytest.MonkeyPat
         "num_ctx": 8192,
         "temperature": 0.0,
         "max_output_tokens": 512,
+        "timeout_seconds": 180.0,
     }
 
 

@@ -19,15 +19,20 @@ the same Settings instance.
 """
 
 from functools import lru_cache
+from typing import Literal
 
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # General application metadata.
     app_name: str = "AI Due Diligence Copilot"
-    app_env: str = "development"  # development | test | production
+    app_env: Literal["development", "test", "production"] = "development"
     debug: bool = True
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    api_prefix: str = "/api/v1"
+    max_request_body_bytes: int = Field(default=1_048_576, ge=1, le=10_485_760)
 
     # Database connection string, e.g.:
     #   postgresql+psycopg://user:password@localhost:5432/dd_copilot
@@ -51,6 +56,13 @@ class Settings(BaseSettings):
     llm_num_ctx: int = 8192
     llm_temperature: float = 0.0
     llm_max_output_tokens: int = 512
+    model_request_timeout_seconds: float = Field(default=180.0, ge=10.0, le=900.0)
+    readiness_timeout_seconds: float = Field(default=3.0, ge=0.5, le=30.0)
+
+    # Local inference is memory-bound. One in-flight AI request is the safe
+    # default on the verified 16 GB Apple Silicon development machine.
+    ai_max_concurrency: int = Field(default=1, ge=1, le=8)
+    ai_queue_timeout_seconds: float = Field(default=5.0, ge=0.0, le=120.0)
 
     # M6 hybrid retrieval. The small cross-encoder keeps reranking practical
     # alongside BGE-large and Ollama on a 16 GB Apple Silicon machine.
@@ -63,6 +75,19 @@ class Settings(BaseSettings):
     # the relevance reranker or the answer-generating LLM.
     citation_verifier_model: str = "cross-encoder/nli-deberta-v3-small"
     citation_verifier_batch_size: int = 8
+
+    @model_validator(mode="after")
+    def validate_environment(self) -> "Settings":
+        if not self.api_prefix.startswith("/") or self.api_prefix.endswith("/"):
+            raise ValueError("API_PREFIX must start with '/' and have no trailing slash")
+        if self.app_env == "production":
+            if self.debug:
+                raise ValueError("DEBUG must be false when APP_ENV=production")
+            if not self.database_url.startswith("postgresql+psycopg://"):
+                raise ValueError(
+                    "production DATABASE_URL must use postgresql+psycopg://"
+                )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

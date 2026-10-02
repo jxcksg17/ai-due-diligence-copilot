@@ -1,7 +1,7 @@
 """Add pgvector embeddings to document chunks.
 
 Revision ID: 20260905_01
-Revises:
+Revises: 20260905_00
 Create Date: 2026-09-05
 """
 
@@ -14,7 +14,7 @@ from pgvector.sqlalchemy import Vector
 
 # revision identifiers, used by Alembic.
 revision: str = "20260905_01"
-down_revision: Union[str, Sequence[str], None] = None
+down_revision: Union[str, Sequence[str], None] = "20260905_00"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

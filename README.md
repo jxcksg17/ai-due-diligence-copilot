@@ -2,136 +2,102 @@
 
 > **Evidence-grounded financial intelligence combining hybrid RAG, deterministic reasoning, management-claim checking, and semantic citation verification.**
 
-## What problem it solves
+## What it solves
 
-Due diligence needs more than plausible answers: reviewers need source pages, reporting periods, deterministic calculations, and evidence that citations support their claims. This copilot makes local filings searchable, comparable, and independently verifiable.
+Due diligence needs more than plausible answers. Reviewers need the correct filing, source pages, reporting periods, reproducible calculations, and evidence that citations actually support each claim. This local-first copilot makes company filings searchable, comparable, and independently verifiable without a mandatory paid AI API.
+
+## Why it is more than “chat with PDF”
+
+- Resolves company, filing type, and fiscal year before retrieval.
+- Combines semantic and lexical search, then reranks the fused evidence.
+- Keeps authoritative financial arithmetic in deterministic Python `Decimal` logic.
+- Separates issuer claims from filing evidence and checks them without inferring intent.
+- Validates citation IDs and uses a separate NLI model to test semantic support.
+- Measures quality with a reviewed 42-case regression baseline.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    PDF[Filings + official issuer releases] --> Parse[Page-aware chunks]
-    Parse --> Embed[BGE embeddings]
-    Embed --> DB[(PostgreSQL + pgvector)]
-
-    Q[Question] --> Meta[Single / two-period resolution]
-    Meta --> Dense[Dense retrieval]
-    Meta --> FTS[PostgreSQL FTS]
-    Dense --> RRF[RRF fusion]
-    FTS --> RRF
-    RRF --> Rank[MiniLM reranking]
-    Rank --> Evidence[Numbered evidence]
-    Evidence --> Radar[Item 1A Risk Radar signals]
-    Evidence --> Claims[Claim vs filing evidence]
-    Evidence --> Qwen[Qwen3 grounded answer]
-    Radar --> Qwen
-    Claims --> Qwen
-    Qwen --> IDs[Citation-ID validation]
-    IDs --> NLI[DeBERTa NLI verification]
-    NLI --> Answer[Verified or flagged answer]
-    Answer --> Eval[42-case regression evaluation]
-
-    Evidence --> Calc[Decimal financial calculation]
-    Calc --> Qwen
-    Evidence --> Align[Temporal alignment]
-    Align --> Calc
-    Align --> Qwen
+  PDF[Filings + issuer releases] --> Parse[Page-aware chunks]
+  Parse --> DB[(PostgreSQL + pgvector)]
+  API[Versioned FastAPI] --> Meta[Metadata resolution]
+  Meta --> Dense[BGE dense search]
+  Meta --> FTS[PostgreSQL FTS]
+  Dense --> RRF[RRF fusion]
+  FTS --> RRF
+  RRF --> Rank[MiniLM reranking]
+  Rank --> Tools[Financial / temporal / risk / claim tools]
+  Rank --> Qwen[Qwen3 grounded generation]
+  Tools --> Qwen
+  Qwen --> IDs[Citation-ID validation]
+  IDs --> NLI[DeBERTa NLI verification]
+  NLI --> Answer[Verified or flagged result]
+  Answer --> Eval[Regression evaluation]
 ```
 
 ## Core capabilities
 
-- **Grounded financial Q&A:** Qwen answers only from numbered filing evidence and returns structured inline citations.
-- **Deterministic financial calculations:** revenue growth uses validated source values, explicit units, provenance, and `ROUND_HALF_UP` behavior.
-- **Temporal change detection:** filings are resolved by company, type, and year; changes retain evidence from both periods.
-- **Risk Radar:** complete Item 1A scans organize four risk topics without severity scores and preserve two-period evidence.
-- **Management Claim vs Evidence:** attributed issuer statements stay separate from filing facts, deterministic analysis, and Qwen interpretation.
-- **Metadata-aware hybrid retrieval:** document scope is resolved before BGE and PostgreSQL FTS retrieval, RRF fusion, and MiniLM reranking.
-- **Citation verification:** DeBERTa checks citation-bearing claims against cited chunks, including multi-citation evidence.
-- **Quantitative evaluation:** a versioned golden set measures retrieval, generation, citations, domain logic, refusals, and latency independently, then compares future runs with an approved baseline.
+- Grounded financial Q&A with numbered evidence and page-level provenance.
+- Deterministic revenue comparison with validated inputs, explicit units, and rounding.
+- Cross-filing temporal change detection and evidence-driven Risk Radar.
+- Attributed Management Claim vs Evidence assessment.
+- Metadata-aware BGE + PostgreSQL FTS retrieval, Reciprocal Rank Fusion, and MiniLM reranking.
+- Structured Qwen output, insufficient-evidence behavior, and DeBERTa citation verification.
+- Production API contracts, safe error envelopes, request IDs, JSON logs, readiness checks, bounded local inference, and model timeouts.
 
-## Local model stack
+## Local stack
 
 ```text
-BAAI/bge-large-en-v1.5                 → embeddings (1024 dimensions)
-PostgreSQL + pgvector                  → vector storage and exact cosine search
-PostgreSQL full-text search            → lexical retrieval
-cross-encoder/ms-marco-MiniLM-L6-v2   → reranking
-qwen3:8b-q4_K_M via Ollama             → grounded generation
-cross-encoder/nli-deberta-v3-small    → semantic citation verification
+BAAI/bge-large-en-v1.5                → 1024-dimensional embeddings
+PostgreSQL + pgvector + FTS           → dense and lexical retrieval
+cross-encoder/ms-marco-MiniLM-L6-v2  → reranking
+qwen3:8b-q4_K_M via Ollama            → grounded generation
+cross-encoder/nli-deberta-v3-small    → citation verification
+FastAPI + SQLAlchemy + Alembic        → API, persistence, migrations
+Docker Compose + GitHub Actions       → reproducible runtime and CI
 ```
 
-FastAPI, SQLAlchemy, Alembic, pypdf, Sentence Transformers, PyTorch, and pytest complete a local workflow without paid APIs.
+## Status
 
-## Milestone status
+M0–M11 are complete: architecture, ingestion, local RAG, deterministic finance, metadata routing, hybrid retrieval, citation verification, temporal comparison, Risk Radar, claim checking, and quantitative evaluation. **M12 adds the production API, container runtime, operational safeguards, and CI/CD foundation.**
 
-| Milestone | Status | Result |
-|---|---:|---|
-| M0–M2 | Complete | Architecture, backend foundation, PDF ingestion |
-| M3 | Complete | Local embeddings, pgvector retrieval, grounded generation |
-| M4 | Complete | Deterministic revenue-growth tooling |
-| M5 | Complete | Metadata-aware document resolution |
-| M6 | Complete | Hybrid retrieval, RRF, cross-encoder reranking |
-| M7 | Complete | Semantic citation verification |
-| M8 | Complete | Cross-filing financial and disclosure comparison |
-| M9 | Complete | Evidence-driven, temporally aware Risk Radar |
-| M10 | Complete | Attributed management claims checked against filing evidence |
-| M11 | Complete | Repeatable AI/RAG evaluation and regression baseline |
+Verified checkpoint: **222 tests passing**; two Apple 10-Ks plus the official FY2025 Q4 earnings-release exhibit; **639/639 chunks embedded**; pgvector `0.8.6`; Alembic `20260906_03`. The M11 baseline reports hybrid+rerank Recall@5 of **83.3%** and intentionally retains imperfect citation/refusal results as honest regression targets.
 
-Verified checkpoint: **204 tests passing**, two Apple 10-Ks plus the official FY2025 Q4 earnings-release exhibit, 639/639 embedded chunks, pgvector `vector(1024)`, and Alembic revision `20260906_03`.
+## Quick start
 
-### Evaluation snapshot
-
-The 42-case M11 baseline is intentionally small and inspectable. Hybrid+rerank Recall@5 is **83.3%**; deterministic financial, temporal, Risk Radar, and claim-state slices score **100%** on their reviewed cases. The baseline also exposes current weaknesses: DeBERTa supports **66.7%** of three generated factual claims, citation-contract validity is **80%**, and safe refusal behavior is **60%**. These are regression baselines, not claims of statistical certainty.
-
-## Quick setup
-
-Prerequisites: Python 3.11+, PostgreSQL with pgvector, and Ollama. The verified machine is a 16 GB Apple Silicon Mac.
+Prerequisites: Docker, Docker Compose, Ollama, and the pinned Qwen model. Model weights remain outside the image.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-
-cp .env.example .env                 # configure DATABASE_URL
-createdb dd_copilot
-psql -d dd_copilot -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+cp .env.example .env
+# Set POSTGRES_PASSWORD and review DATABASE_URL/runtime settings.
 ollama pull qwen3:8b-q4_K_M
+docker compose build
+docker compose run --rm migrate
+docker compose up -d api
+curl http://localhost:8000/health/ready
 ```
 
-Place official filings or issuer releases from [SEC EDGAR](https://www.sec.gov/edgar/search/) in `data/`; PDFs are ignored by Git.
+Interactive API documentation is available at `http://localhost:8000/docs`. The versioned surface provides grounded Q&A, revenue comparison, Risk Radar, and Management Claim vs Evidence endpoints. Detailed runtime guidance is in [`docs/operations.md`](docs/operations.md).
+
+Place official filings or issuer releases from [SEC EDGAR](https://www.sec.gov/edgar/search/) in `data/`; PDFs are ignored by Git. For local development:
 
 ```bash
-python -m scripts.ingest_document \
-  --company "Apple" \
-  --document-type 10-K \
-  --fiscal-year 2024 \
-  --file data/apple_2024_10k.pdf
-
-alembic stamp 20260905_02
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
 alembic upgrade head
-
-python -m scripts.backfill_embeddings
 pytest -q
-python -m evals.run --mode quick
-python -m evals.run --mode full --output evals/reports/current.json
-python -m evals.compare \
-  --baseline evals/baselines/m11_v1.json \
-  --current evals/reports/current.json
-uvicorn app.main:app --reload
+python -m evals.ci_gate
 ```
-
-For a pre-embedding M2 database, run `alembic upgrade head` directly.
 
 ## Known limitations
 
-- Chunking is page-aware, not section-aware; revenue growth is the only deterministic financial tool.
-- Temporal finance covers consolidated total net sales; Risk Radar supports four Item 1A topics.
-- Claim checking uses constrained, attributable earnings-release patterns; it is not a credibility score.
-- NLI is conservative and may flag subtle or partly aligned wording as ambiguous.
-- PostgreSQL FTS is not full BM25; vector search is exact rather than ANN-indexed.
-- Running every model simultaneously can create memory pressure on a 16 GB Mac. Retrieval, Qwen generation, and DeBERTa verification are safest as staged workloads.
-- The 42-case baseline is a regression signal, not a statistically representative benchmark; generation and refusal slices are especially small.
+- Revenue growth is the only authoritative financial calculation; temporal and risk categories are intentionally narrow.
+- PostgreSQL FTS is not full BM25, vector search is exact, and chunking is page-aware rather than section-aware.
+- The 42-case evaluation set is a regression signal, not a statistically representative benchmark.
+- Cold local model startup is slow. A 16 GB Mac should use one worker and one in-flight AI request; retrieval, Qwen, and NLI run as staged workloads.
+- No authentication, frontend, Redis queue, or managed deployment is included.
 
 ## Roadmap
 
-**M12 next:** product APIs/UI, authentication, deployment, and CI/CD.
+M12 completes the portfolio productionization checkpoint. Future work may add authentication, asynchronous jobs, a reviewer UI, managed deployment, and broader financial tools without weakening the evidence and evaluation boundaries.

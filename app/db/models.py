@@ -13,10 +13,13 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
+    literal_column,
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -104,3 +107,11 @@ class Chunk(Base):
     section = Column(String(255), nullable=True)
 
     document = relationship("Document", back_populates="chunks")
+
+    __table_args__ = (
+        Index(
+            "ix_chunks_text_fts",
+            func.to_tsvector(literal_column("'english'::regconfig"), text),
+            postgresql_using="gin",
+        ).ddl_if(dialect="postgresql"),
+    )

@@ -31,6 +31,7 @@ class OllamaLLMClient:
         num_ctx: int,
         temperature: float,
         max_output_tokens: int,
+        timeout_seconds: float = 180.0,
         client: Any | None = None,
     ) -> None:
         if num_ctx < 1:
@@ -41,7 +42,7 @@ class OllamaLLMClient:
         if client is None:
             from ollama import Client
 
-            client = Client(host=host)
+            client = Client(host=host, timeout=timeout_seconds)
 
         self._client = client
         self._model = model
@@ -85,6 +86,7 @@ def get_llm_client(settings: Settings) -> LLMClient:
             num_ctx=settings.llm_num_ctx,
             temperature=settings.llm_temperature,
             max_output_tokens=settings.llm_max_output_tokens,
+            timeout_seconds=settings.model_request_timeout_seconds,
         )
     raise ValueError(
         f"Unsupported LLM_PROVIDER {settings.llm_provider!r}; expected 'ollama'"
