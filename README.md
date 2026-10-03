@@ -4,11 +4,11 @@
 
 The recruiter-facing research terminal puts the answer, verification state, filing provenance, and ranked evidence in one high-density workspace—without moving business logic into the browser.
 
-## What it solves
+## Overview
 
 Due diligence needs more than plausible answers. Reviewers need the correct filing, source pages, reporting periods, reproducible calculations, and evidence that citations actually support each claim. This local-first copilot makes company filings searchable, comparable, and independently verifiable without a mandatory paid AI API.
 
-## Why it is more than “chat with PDF”
+## Due Diligence
 
 - Resolves company, filing type, and fiscal year before retrieval.
 - Combines semantic and lexical search, then reranks the fused evidence.
