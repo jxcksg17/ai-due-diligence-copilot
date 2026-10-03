@@ -1,6 +1,7 @@
 """FastAPI application factory and production entrypoint."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import health
 from app.api.exception_handlers import install_exception_handlers
@@ -29,6 +30,15 @@ def create_app(
     app.state.readiness_checker = readiness_checker or ReadinessChecker(
         settings=resolved, engine=engine
     )
+    if resolved.cors_allowed_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=resolved.cors_allowed_origins,
+            allow_credentials=False,
+            allow_methods=["GET", "POST", "OPTIONS"],
+            allow_headers=["Content-Type", "X-Request-ID"],
+            expose_headers=["X-Request-ID"],
+        )
     install_request_middleware(app, resolved)
     install_exception_handlers(app)
     app.include_router(health.router)

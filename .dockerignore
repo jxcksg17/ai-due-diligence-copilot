@@ -15,6 +15,9 @@ evals/reports/*.json
 models
 huggingface
 work
+frontend/node_modules
+frontend/dist
+frontend/*.tsbuildinfo
 *.gguf
 *.safetensors
 tests

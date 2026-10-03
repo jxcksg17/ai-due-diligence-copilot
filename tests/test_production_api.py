@@ -148,6 +148,33 @@ def test_production_configuration_rejects_debug_and_non_postgres() -> None:
         Settings(database_url="sqlite:///bad.db", app_env="production", debug=False)
 
 
+def test_cors_is_explicit_and_exposes_request_id(production_client: TestClient) -> None:
+    response = production_client.options(
+        "/api/v1/query",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,x-request-id",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    actual = production_client.post(
+        "/api/v1/query",
+        json={"question": "What were net sales?", "company": "Apple"},
+        headers={"Origin": "http://localhost:5173"},
+    )
+    assert "X-Request-ID" in actual.headers["access-control-expose-headers"]
+
+
+def test_cors_rejects_wildcard_origin_configuration() -> None:
+    with pytest.raises(ValueError, match="explicit origins"):
+        Settings(
+            database_url="postgresql+psycopg://test:test@localhost/test",
+            cors_allowed_origins=["*"],
+        )
+
+
 def test_concurrency_guard_rejects_second_caller() -> None:
     guard = AIConcurrencyGuard(limit=1, queue_timeout_seconds=0.01)
     entered = Event()

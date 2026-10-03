@@ -27,6 +27,19 @@ def test_compose_uses_explicit_migration_gate_and_external_ollama() -> None:
     assert "condition: service_completed_successfully" in compose
     assert "host.docker.internal" in compose
     assert "POSTGRES_PASSWORD:?" in compose
+    assert "frontend:" in compose
+    assert "context: ./frontend" in compose
+    assert "VITE_API_BASE_URL" in compose
+
+
+def test_frontend_is_isolated_from_python_runtime() -> None:
+    backend_dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    frontend_dockerfile = (ROOT / "frontend" / "Dockerfile").read_text(
+        encoding="utf-8"
+    )
+    assert "node" not in backend_dockerfile.lower()
+    assert "FROM node:22-alpine AS build" in frontend_dockerfile
+    assert "FROM nginx:1.29-alpine" in frontend_dockerfile
 
 
 def test_ci_runs_migrations_tests_and_model_free_regression_gate() -> None:

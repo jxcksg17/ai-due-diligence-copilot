@@ -21,7 +21,7 @@ the same Settings instance.
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     api_prefix: str = "/api/v1"
     max_request_body_bytes: int = Field(default=1_048_576, ge=1, le=10_485_760)
+    cors_allowed_origins: list[str] = [
+        "http://localhost:5173",
+        "http://localhost:8080",
+    ]
 
     # Database connection string, e.g.:
     #   postgresql+psycopg://user:password@localhost:5432/dd_copilot
@@ -76,10 +80,19 @@ class Settings(BaseSettings):
     citation_verifier_model: str = "cross-encoder/nli-deberta-v3-small"
     citation_verifier_batch_size: int = 8
 
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: object) -> object:
+        if isinstance(value, str) and not value.lstrip().startswith("["):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
     @model_validator(mode="after")
     def validate_environment(self) -> "Settings":
         if not self.api_prefix.startswith("/") or self.api_prefix.endswith("/"):
             raise ValueError("API_PREFIX must start with '/' and have no trailing slash")
+        if "*" in self.cors_allowed_origins:
+            raise ValueError("CORS_ALLOWED_ORIGINS must list explicit origins")
         if self.app_env == "production":
             if self.debug:
                 raise ValueError("DEBUG must be false when APP_ENV=production")

@@ -43,3 +43,14 @@ jobs:
       - run: python -m compileall -q app evals scripts tests
       - run: pytest -q
       - run: python -m evals.ci_gate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

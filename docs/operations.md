@@ -2,7 +2,7 @@
 
 ## Runtime boundary
 
-The API, migrations, and PostgreSQL run in containers. Ollama runs on the host and is reached through `host.docker.internal`; model weights are not copied into the API image. Hugging Face models are downloaded into a named cache volume on first use. Local AI requests default to one at a time because the verified 16 GB Apple Silicon machine cannot safely keep BGE, MiniLM, Qwen, and DeBERTa resident concurrently.
+The React frontend, API, migrations, and PostgreSQL run in separate containers. Ollama runs on the host and is reached through `host.docker.internal`; model weights are not copied into either image. Hugging Face models are downloaded into a named cache volume on first use. Local AI requests default to one at a time because the verified 16 GB Apple Silicon machine cannot safely keep BGE, MiniLM, Qwen, and DeBERTa resident concurrently.
 
 ## Start and migrate
 
@@ -11,10 +11,12 @@ Create `.env` from `.env.example` and set a non-default `POSTGRES_PASSWORD`. Ens
 ```bash
 docker compose build
 docker compose run --rm migrate
-docker compose up -d api
+docker compose up -d
 curl http://localhost:8000/health/live
 curl http://localhost:8000/health/ready
 ```
+
+The research terminal is available at `http://localhost:5173`. `VITE_API_BASE_URL` is compiled into the static frontend image and defaults to the browser-accessible API at `http://localhost:8000`. Local Vite development uses `npm run dev` from `frontend/`; the API explicitly allows only configured origins through `CORS_ALLOWED_ORIGINS`.
 
 `migrate` is deliberately separate from API startup. A failed migration prevents the API service from starting instead of hiding schema changes inside an entrypoint.
 
