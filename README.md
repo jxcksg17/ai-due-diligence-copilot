@@ -96,14 +96,6 @@ python -m evals.ci_gate
 cd frontend && npm ci && npm test && npm run build
 ```
 
-## Known limitations
-
-- Revenue growth is the only authoritative financial calculation; temporal and risk categories are intentionally narrow.
-- PostgreSQL FTS is not full BM25, vector search is exact, and chunking is page-aware rather than section-aware.
-- The 42-case evaluation set is a regression signal, not a statistically representative benchmark.
-- Cold local model startup is slow. A 16 GB Mac should use one worker and one in-flight AI request; retrieval, Qwen, and NLI run as staged workloads.
-- No authentication, Redis queue, or managed deployment is included.
-
 ## Roadmap
 
 Future work may add authentication, asynchronous jobs, managed deployment, and broader financial tools without weakening the evidence and evaluation boundaries.
